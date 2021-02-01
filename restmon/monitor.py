@@ -28,16 +28,14 @@ import requests
 import time
 import inspect
 from .abc import BaseMonitor
-from typing import Callable
+from typing import Callable, Optional
 
 __all__ = ('Monitor',)
 
-VALID_EVENTS: tuple = ('payload_change', 'request', 'no_change')
+VALID_EVENTS: tuple = ('change', 'request', 'no_change')
 
 
 class Monitor(BaseMonitor):
-    __slots__ = ('_rate', '_url', '_headers', '_matrix', 'body', 'method', 'last_payload')
-
     def __init__(self, url: str,
                  rate: float,
                  headers=None,
@@ -48,27 +46,30 @@ class Monitor(BaseMonitor):
         if not isinstance(body, dict):
             body: dict = {}
         self._rate: float = rate
-        self._url: str = url
+        self.url: str = url
         self._headers: dict = headers
         self._matrix: dict = {}
         self.body: dict = body
         self.method: str = method
-        self.last_payload: dict = {}
+        self.last_res: Optional[requests.Response] = None
 
-    def __check(self) -> None:
+    def __run(self) -> None:
         while True:
-            if 'request' in self._matrix:
-                self._matrix['request']()
-            if 'payload_change' in self._matrix:
-                payload: dict = requests.request(method=self.method,
-                                                 url=self._url,
-                                                 headers=self._headers,
-                                                 json=self.body).json()
-                if payload != self.last_payload:
-                    self._matrix['payload_change'](self.last_payload, payload)
-                    self.last_payload = payload
-                elif 'no_change' in self._matrix:
-                    self._matrix['no_change']()
+            if c := self._matrix.get('request', None):
+                c()
+            if 'change' in self._matrix:
+                res: requests.Response = requests.request(method=self.method,
+                                                          url=self.url,
+                                                          headers=self._headers,
+                                                          json=self.body)
+                if self.last_res is None:
+                    self._matrix['change'](res, res)
+                else:
+                    if self._are_different(res, self.last_res):
+                        self._matrix['change'](self.last_res, res)
+                    elif c := self._matrix.get('no_change', None):
+                        c()
+                self.last_res: requests.Response = res
             time.sleep(self._rate)
 
     def listener(self, event=None) -> Callable:
@@ -85,12 +86,19 @@ class Monitor(BaseMonitor):
             to_assign: str = str(event or actual.__name__).lower().replace('on_', '', 1)
             if to_assign not in VALID_EVENTS:
                 raise RuntimeError(f'{to_assign} is not a valid event to listen for')
-            elif to_assign == 'payload_change' and (p := len(inspect.signature(actual).parameters)) != 2:
-                raise RuntimeError(f'Expected payload-change callback to take in 2 parameters, got {p}')
+            elif to_assign == 'change' and (p := len(inspect.signature(actual).parameters)) != 2:
+                raise RuntimeError(f'Expected change callback to take in 2 parameters, got {p}')
             self._matrix[to_assign]: Callable = actual
             return func
 
         return decorator
 
+    @staticmethod
+    def _are_different(res1: requests.Response, res2: requests.Response) -> bool:
+        return any((res1.json() != res2.json(),
+                    res1.status_code != res2.status_code,
+                    res1.content != res2.content,
+                    res1.text != res2.text))
+
     def start(self) -> None:
-        self.__check()
+        self.__run()

@@ -11,6 +11,7 @@ A tool for monitoring RESTful APIs
 """
 
 from .monitor import Monitor
+from requests import Response
 from collections import namedtuple
 
 __version__ = '1.0.0'

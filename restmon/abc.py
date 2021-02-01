@@ -3,7 +3,10 @@ from typing import Callable
 
 
 class BaseMonitor(metaclass=abc.ABCMeta):
-    __slots__ = ('_rate', '_url', '_headers', '_matrix', 'body', 'method', 'last_payload')
+    __slots__ = ('_rate', 'url',
+                 '_headers', '_matrix',
+                 'body', 'method',
+                 'last_res')
 
     @abc.abstractmethod
     def start(self) -> None:
