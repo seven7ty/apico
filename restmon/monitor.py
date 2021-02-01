@@ -53,6 +53,13 @@ class Monitor(BaseMonitor):
         self.method: str = method
         self.last_res: Optional[requests.Response] = None
 
+    @staticmethod
+    def _are_different(res1: requests.Response, res2: requests.Response) -> bool:
+        return any((res1.json() != res2.json(),
+                    res1.status_code != res2.status_code,
+                    res1.content != res2.content,
+                    res1.text != res2.text))
+
     def __run(self) -> None:
         while True:
             if c := self._matrix.get('request', None):
@@ -92,13 +99,6 @@ class Monitor(BaseMonitor):
             return func
 
         return decorator
-
-    @staticmethod
-    def _are_different(res1: requests.Response, res2: requests.Response) -> bool:
-        return any((res1.json() != res2.json(),
-                    res1.status_code != res2.status_code,
-                    res1.content != res2.content,
-                    res1.text != res2.text))
 
     def start(self) -> None:
         self.__run()
