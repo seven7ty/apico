@@ -32,10 +32,10 @@ from typing import Callable, Optional
 
 __all__ = ('Monitor',)
 
-VALID_EVENTS: tuple = ('change', 'request', 'no_change')
-
 
 class Monitor(BaseMonitor):
+    __event_names__: tuple = ('change', 'request', 'no_change')
+
     def __init__(self, url: str,
                  rate: float,
                  headers=None,
@@ -91,7 +91,7 @@ class Monitor(BaseMonitor):
             if inspect.iscoroutinefunction(actual):
                 raise TypeError('Listener cannot be a coroutine function.')
             to_assign: str = str(event or actual.__name__).lower().replace('on_', '', 1)
-            if to_assign not in VALID_EVENTS:
+            if to_assign not in self.__event_names__:
                 raise RuntimeError(f'{to_assign} is not a valid event to listen for')
             elif to_assign == 'change' and (p := len(inspect.signature(actual).parameters)) != 2:
                 raise RuntimeError(f'Expected change callback to take in 2 parameters, got {p}')
