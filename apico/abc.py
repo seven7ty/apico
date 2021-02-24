@@ -31,6 +31,8 @@ __all__ = ('BaseMonitor',)
 
 
 class BaseMonitor(metaclass=abc.ABCMeta):
+    __event_names__: tuple = ()
+
     __slots__ = ('_rate', 'url',
                  '_headers', '_matrix',
                  'body', 'method',
@@ -43,3 +45,9 @@ class BaseMonitor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def listener(self, event: str = None) -> Callable:
         raise NotImplementedError
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__qualname__} url=%s>' % self.url
+
+    def __float__(self) -> float:
+        return self._rate

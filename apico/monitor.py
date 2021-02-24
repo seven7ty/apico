@@ -25,10 +25,10 @@ SOFTWARE.
 """
 
 import requests
-import time
 import inspect
+import time
 from .abc import BaseMonitor
-from typing import Callable, Optional
+from typing import Optional, Callable
 
 __all__ = ('Monitor',)
 
@@ -38,8 +38,8 @@ class Monitor(BaseMonitor):
 
     def __init__(self, url: str,
                  rate: float,
-                 headers=None,
-                 body=None,
+                 headers: Optional[dict] = None,
+                 body: Optional[dict] = None,
                  method: str = 'get'):
         if not isinstance(headers, dict):
             headers: dict = {}
@@ -79,7 +79,7 @@ class Monitor(BaseMonitor):
                 self.last_res: requests.Response = res
             time.sleep(self._rate)
 
-    def listener(self, event=None) -> Callable:
+    def listener(self, event: str = None) -> Callable:
         if event is not None and not isinstance(event, str):
             raise TypeError(
                 'Monitor.listener expected str but received {0.__class__.__name__!r} instead.'.format(event))

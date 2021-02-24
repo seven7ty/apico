@@ -11,6 +11,7 @@ A tool for monitoring RESTful APIs
 """
 
 from .monitor import Monitor
+from .request import Request
 from requests import Response
 from collections import namedtuple
 
