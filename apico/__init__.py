@@ -16,11 +16,11 @@ from requests import Response
 from collections import namedtuple
 
 __version__ = '1.0.0'
-__title__ = 'rest-mon'
+__title__ = 'apico'
 __license__ = 'MIT'
 __author__ = 'wulf'
 __email__ = 'wulf.developer@gmail.com'
-__uri__ = "https://github.com/itsmewulf/rest-mon"
+__uri__ = "https://github.com/itsmewulf/apico"
 __copyright__ = '(c) 2021 %s' % __author__
 
 __path__ = __import__('pkgutil').extend_path(__path__, __name__)
