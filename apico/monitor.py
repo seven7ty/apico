@@ -45,13 +45,13 @@ class Monitor(BaseMonitor):
             headers: dict = {}
         if not isinstance(body, dict):
             body: dict = {}
-        self._rate: float = rate
+        self.rate: float = rate
         self.url: str = url
-        self._headers: dict = headers
+        self.headers: dict = headers
         self._matrix: dict = {}
         self.body: dict = body
         self.method: str = method
-        self.last_res: Optional[requests.Response] = None
+        self.last_response: Optional[requests.Response] = None
 
     @staticmethod
     def _are_different(res1: requests.Response, res2: requests.Response) -> bool:
@@ -62,24 +62,35 @@ class Monitor(BaseMonitor):
 
     def __run(self) -> None:
         while True:
-            if c := self._matrix.get('request', None):
-                c()
+            if callback := self._matrix.get('request', None):
+                callback()
             if 'change' in self._matrix:
                 res: requests.Response = requests.request(method=self.method,
                                                           url=self.url,
-                                                          headers=self._headers,
+                                                          headers=self.headers,
                                                           json=self.body)
-                if self.last_res is None:
+                if self.last_response is None:
                     self._matrix['change'](res, res)
                 else:
-                    if self._are_different(res, self.last_res):
-                        self._matrix['change'](self.last_res, res)
-                    elif c := self._matrix.get('no_change', None):
-                        c()
-                self.last_res: requests.Response = res
-            time.sleep(self._rate)
+                    if self._are_different(res, self.last_response):
+                        self._matrix['change'](self.last_response, res)
+                    elif callback := self._matrix.get('no_change', None):
+                        callback()
+                self.last_response: requests.Response = res
+            time.sleep(self.rate)
 
     def listener(self, event: str = None) -> Callable:
+        """
+        Register a new listener for the given event.
+        Valid event names are 'change', 'request' and 'no_change'.
+        'request' is called **before** every request is made (no params).
+        'change' is called when the response changes (2 params - old, new).
+        'no_change' is called when the response is the same as before ()
+
+        :param event: The event name.
+        :return: A registered callback function
+        """
+
         if event is not None and not isinstance(event, str):
             raise TypeError(
                 'Monitor.listener expected str but received {0.__class__.__name__!r} instead.'.format(event))
@@ -95,7 +106,7 @@ class Monitor(BaseMonitor):
                 raise RuntimeError(f'{to_assign} is not a valid event to listen for')
             elif to_assign == 'change' and (p := len(inspect.signature(actual).parameters)) != 2:
                 raise RuntimeError(f'Expected change callback to take in 2 parameters, got {p}')
-            self._matrix[to_assign]: Callable = actual
+            self._matrix[to_assign] = actual
             return func
 
         return decorator
