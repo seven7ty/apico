@@ -1,4 +1,4 @@
-# apico 🎈
+# apico
 *The easy way to monitor changes in RESTful APIs.*
 
 ## Installation
