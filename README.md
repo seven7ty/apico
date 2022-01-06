@@ -42,10 +42,10 @@ def on_change(...):
 
 ### Returns
 The responses returned by apico are actually instances of [`requests.Response`](https://pypi.org/project/requests/)
-
-### Reporting Issues
+_________________
+## Reporting Issues
 If you find any error/bug/mistake with the package or in the code feel free to create an issue and report
 it [here.](https://github.com/itsmewulf/apico/issues)
 
-### Fix/Edit Content
+## Fix/Edit Content
 If you wish to contribute to this package, fork the repository, make your changes and then simply create a Pull Request!
