@@ -1,4 +1,4 @@
-# apico
+# apico [![Badge](https://img.shields.io/pypi/v/apico?color=3776AB&logo=python&style=for-the-badge)](https://pypi.org/project/apico/)  [![Badge 2](https://img.shields.io/pypi/dm/apico?color=3776AB&logo=python&style=for-the-badge)](https://pypi.org/project/apico/)
 *The easy way to monitor changes in RESTful APIs.*
 
 ## Installation
