@@ -26,8 +26,6 @@ def on_request():
 ```
 
 ## Some reference
-Below you'll find some insight that might not be instantly apparent.
-
 ### Events
 The events supported by the `Monitor.listener` decorator are:
 - `change`
@@ -42,6 +40,9 @@ def on_change(...):
 
 ### Returns
 The responses returned by apico are actually instances of [`requests.Response`](https://pypi.org/project/requests/)
+
+### Rate
+The rate at which the Monitor sends requests is controlled via the `rate` parameter, which is either an integer, or a float - `33` is a request every 33 seconds, `0.5` is 2 requests every second.
 _________________
 ## Reporting Issues
 If you find any error/bug/mistake with the package or in the code feel free to create an issue and report
