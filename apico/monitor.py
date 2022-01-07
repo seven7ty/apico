@@ -27,31 +27,100 @@ SOFTWARE.
 import requests
 import inspect
 import time
-from .abc import BaseMonitor
-from typing import Optional, Callable
+from typing import Optional, Callable, Union, IO
+from requests.cookies import RequestsCookieJar
 
 __all__ = ('Monitor',)
 
 
-class Monitor(BaseMonitor):
+class Monitor:
     __event_names__: tuple = ('change', 'request', 'no_change')
 
-    def __init__(self, url: str,
+    def __init__(self,
+                 url: str,
                  rate: float,
+                 method: str = 'GET',
+                 params: Optional[Union[dict, bytes]] = None,
+                 data: Optional[Union[dict, list[tuple], bytes, IO]] = None,
                  headers: Optional[dict] = None,
-                 body: Optional[dict] = None,
-                 method: str = 'get'):
-        if not isinstance(headers, dict):
-            headers: dict = {}
-        if not isinstance(body, dict):
-            body: dict = {}
+                 cookies: Optional[Union[dict, RequestsCookieJar]] = None,
+                 files: Optional[dict[str, IO]] = None,
+                 auth: Optional[Union[tuple, Callable]] = None,
+                 timeout: Union[int, float] = None,
+                 allow_redirects: bool = True,
+                 proxies=None,
+                 hooks=None,
+                 stream: bool = False,
+                 verify: Optional[Union[bool, str]] = True,
+                 cert: Optional[Union[str, tuple[str, str]]] = None,
+                 json: Optional[dict] = None):
+        """
+        Initializes a new instance of the Monitor class with the specified request parameters.
+
+        :param rate: The rate at which the monitor should run (interval)
+        :param method: method for the new :class:`Request` object.
+        :param url: URL for the new :class:`Request` object.
+        :param params: (optional) Dictionary or bytes to be sent in the query
+            string for the :class:`Request`.
+        :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+            object to send in the body of the :class:`Request`.
+        :param json: (optional) json to send in the body of the
+            :class:`Request`.
+        :param headers: (optional) Dictionary of HTTP Headers to send with the
+            :class:`Request`.
+        :param cookies: (optional) Dict or CookieJar object to send with the
+            :class:`Request`.
+        :param files: (optional) Dictionary of ``'filename': file-like-objects``
+            for multipart encoding upload.
+        :param auth: (optional) Auth tuple or callable to enable
+            Basic/Digest/Custom HTTP Auth.
+        :param timeout: (optional) How long to wait for the server to send
+            data before giving up, as a float, or a :ref:`(connect timeout,
+            read timeout) <timeouts>` tuple.
+        :type timeout: float or tuple
+        :param allow_redirects: (optional) Set to True by default.
+        :type allow_redirects: bool
+        :param proxies: (optional) Dictionary mapping protocol or protocol and
+            hostname to the URL of the proxy.
+        :param stream: (optional) whether to immediately download the response
+            content. Defaults to ``False``.
+        :param verify: (optional) Either a boolean, in which case it controls whether we verify
+            the server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use. Defaults to ``True``. When set to
+            ``False``, requests will accept any TLS certificate presented by
+            the server, and will ignore hostname mismatches and/or expired
+            certificates, which will make your application vulnerable to
+            man-in-the-middle (MitM) attacks. Setting verify to ``False``
+            may be useful during local development or testing.
+        :param cert: (optional) if String, path to ssl client cert file (.pem).
+            If Tuple, ('cert', 'key') pair.
+        """
+
+        # Monitor properties
         self.rate: float = rate
         self.url: str = url
-        self.headers: dict = headers
-        self._matrix: dict = {}
-        self.body: dict = body
-        self.method: str = method
         self.last_response: Optional[requests.Response] = None
+        self._matrix: dict = {}
+
+        # Session stuff
+        self.session: requests.Session = requests.session()
+
+        # Request properties
+        self.method: str = method
+        self.cookies: Optional[Union[dict, RequestsCookieJar]] = cookies
+        self.params: Optional[Union[dict, bytes]] = params
+        self.data: Optional[Union[dict, list[tuple], bytes, IO]] = data
+        self.headers: Optional[dict] = headers
+        self.files: Optional[dict[str, IO]] = files
+        self.auth: Optional[Union[tuple, Callable]] = auth
+        self.hooks: Optional[dict] = hooks
+        self.json: Optional[dict] = json
+        self.timeout: Union[int, float] = timeout
+        self.allow_redirects: bool = allow_redirects
+        self.proxies: Optional[dict] = proxies
+        self.stream: bool = stream
+        self.verify: Optional[Union[bool, str]] = verify
+        self.cert: Optional[Union[str, tuple[str, str]]] = cert
 
     @staticmethod
     def _are_different(res1: requests.Response, res2: requests.Response) -> bool:
@@ -65,10 +134,24 @@ class Monitor(BaseMonitor):
             if callback := self._matrix.get('request', None):
                 callback()
             if 'change' in self._matrix:
-                res: requests.Response = requests.request(method=self.method,
-                                                          url=self.url,
-                                                          headers=self.headers,
-                                                          json=self.body)
+                res: requests.Response = self.session.request(
+                    method=self.method,
+                    url=self.url,
+                    params=self.params,
+                    data=self.data,
+                    headers=self.headers,
+                    cookies=self.cookies,
+                    files=self.files,
+                    auth=self.auth,
+                    hooks=self.hooks,
+                    json=self.json,
+                    proxies=self.proxies,
+                    stream=self.stream,
+                    verify=self.verify,
+                    cert=self.cert,
+                    timeout=self.timeout,
+                    allow_redirects=self.allow_redirects
+                )
                 if self.last_response is None:
                     self._matrix['change'](res, res)
                 else:
