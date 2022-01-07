@@ -37,12 +37,15 @@ As you can see in the example, listeners can be registered by passing the event 
 @monitor.listener()
 def on_change(...):
 ```
+### Monitor arguments
+The monitor accepts a boatload of arguments, mainly ones that are then passed down to [`requests.Session.request()`](https://docs.python-requests.org/en/latest/api/#requests.Session.request), so, for a detailed insight follow the hyperlink or read the docstring.
 
 ### Returns
 The responses returned by apico are actually instances of [`requests.Response`](https://pypi.org/project/requests/)
 
 ### Rate
 The rate at which the Monitor sends requests is controlled via the `rate` parameter, which is either an integer, or a float - `33` is a request every 33 seconds, `0.5` is 2 requests every second.
+
 _________________
 ## Reporting Issues
 If you find any error/bug/mistake with the package or in the code feel free to create an issue and report
