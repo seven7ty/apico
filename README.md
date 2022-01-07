@@ -23,6 +23,9 @@ def nothing_changed():
 @monitor.listener()
 def on_request():
     print('This is called before every request.')
+    
+
+monitor.start()
 ```
 
 ## Some reference
